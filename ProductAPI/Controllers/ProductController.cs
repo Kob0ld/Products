@@ -20,16 +20,20 @@ namespace ProductAPI.Controllers
         { return products; }
 
         [HttpGet("{id}")]
-        public ProductDTO GetById(Guid id)
+        public ActionResult<ProductDTO> GetById(Guid id)
         {
             var product = products.Where(x => x.Id == id).FirstOrDefault();
-            return product;
+            if (product == null)
+            {
+                return NotFound();
+            }
+            return Ok(product);
         }
 
         [HttpPost]
-        public ProductDTO PostProduct(CreateProductDTO createProduct)
+        public ActionResult<ProductDTO> PostProduct(CreateProductDTO createProduct)
         {
-            var product = new ProductDTO 
+            var product = new ProductDTO
                 (
                     Guid.NewGuid(),
                     createProduct.ProductName,
@@ -39,7 +43,7 @@ namespace ProductAPI.Controllers
                 );
 
             products.Add(product);
-            return product;
+            return CreatedAtAction(nameof(GetById), new { id = product.Id }, product);
         }
 
         [HttpPut]
@@ -55,15 +59,19 @@ namespace ProductAPI.Controllers
 
             var index = products.FindIndex(x => x.Id == id);
             products[index] = product;
-            return product;
+            return products[index];
         }
 
-        [HttpDelete]
-        public string DeleteProduct(Guid id) 
+        [HttpDelete("{id})")]
+        public ActionResult<string> DeleteProduct(Guid id) 
         {
             var index = products.FindIndex(x => x.Id == id);
             products.RemoveAt(index);
-            return "Termék törölve";
+            if (index == 0)
+            {
+                return NotFound();
+            }
+            return StatusCode(205, "Törölt");
         }
     }
 }
